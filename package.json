@@ -1,6 +1,6 @@
 {
   "name": "hivellm-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Bring a live hiveLLM expert into Codex, OpenCode, and other MCP clients.",
   "type": "module",
   "private": false,

@@ -2,6 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import { callHiveTool, HIVELLM_TOOLS } from "./tools.js";
+import { VERSION } from "./version.js";
 
 export const SERVER_INSTRUCTIONS = [
   "hiveLLM connects this AI client to a real human expert.",
@@ -16,7 +17,7 @@ export const SERVER_INSTRUCTIONS = [
 export function createHiveMcpServer(config, options = {}) {
   const callTool = options.callTool || ((name, args) => callHiveTool(config, name, args));
   const server = new Server(
-    { name: "hivellm", version: "0.1.0" },
+    { name: "hivellm", version: VERSION },
     {
       capabilities: { tools: {} },
       instructions: SERVER_INSTRUCTIONS,

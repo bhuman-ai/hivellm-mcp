@@ -22,7 +22,7 @@ npm install -g github:bhuman-ai/hivellm-mcp
 HIVELLM_API_KEY=your_key hivellm-mcp install opencode
 ```
 
-The OpenCode installer only adds the `hivellm` MCP entry. It does not change the selected model, provider, or existing MCP servers.
+The OpenCode installer adds the `hivellm` MCP entry and removes the recognized legacy `castellar-human` adapter if present. It does not change the selected model, provider, or unrelated MCP servers.
 
 ## Tools
 
