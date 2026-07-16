@@ -3,6 +3,7 @@ import { callHiveApi } from "./api.js";
 import { loadConfig } from "./config.js";
 import { installClient, installedServerEntry, validateAccount } from "./install.js";
 import { runStdioServer } from "./server.js";
+import { VERSION } from "./version.js";
 
 function usage() {
   return `hiveLLM MCP
@@ -29,7 +30,7 @@ export async function main(argv = process.argv.slice(2), options = {}) {
     return;
   }
   if (command === "--version" || command === "version") {
-    stdout.write("0.1.0\n");
+    stdout.write(`${VERSION}\n`);
     return;
   }
   if (command === "install") {

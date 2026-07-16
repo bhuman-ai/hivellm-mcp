@@ -43,7 +43,13 @@ test("OpenCode install preserves models, providers, comments, and other MCPs", (
   // keep the user's selected model
   "model": "openai/gpt-5.6",
   "provider": { "openai": { "options": {} } },
-  "mcp": { "github": { "type": "remote", "url": "https://example.com/mcp" } },
+  "mcp": {
+    "github": { "type": "remote", "url": "https://example.com/mcp" },
+    "castellar-human": {
+      "type": "local",
+      "command": ["node", "/old/castellar.js", "human-mcp"]
+    }
+  },
 }
 `;
   const next = mergeOpenCodeConfig(source, config, { nodePath: "/node", serverEntry: "/hivellm/server.js" });
@@ -52,8 +58,27 @@ test("OpenCode install preserves models, providers, comments, and other MCPs", (
   assert.match(next, /keep the user's selected model/);
   assert.equal(parsed.model, "openai/gpt-5.6");
   assert.equal(parsed.mcp.github.url, "https://example.com/mcp");
+  assert.equal(parsed.mcp["castellar-human"], undefined);
   assert.deepEqual(parsed.mcp.hivellm.command, ["/node", "/hivellm/server.js"]);
   assert.equal(parsed.mcp.hivellm.environment.HIVELLM_API_KEY, "hive_install_key");
+});
+
+test("OpenCode install does not remove an unrelated server that reuses the legacy key", () => {
+  const source = JSON.stringify({
+    mcp: {
+      "castellar-human": {
+        type: "remote",
+        url: "https://example.com/custom-mcp",
+      },
+    },
+  });
+  const parsed = parse(mergeOpenCodeConfig(source, config, {
+    nodePath: "/node",
+    serverEntry: "/hivellm/server.js",
+  }));
+
+  assert.equal(parsed.mcp["castellar-human"].url, "https://example.com/custom-mcp");
+  assert.equal(parsed.mcp.hivellm.enabled, true);
 });
 
 test("writes a valid global OpenCode config without changing unrelated settings", () => {

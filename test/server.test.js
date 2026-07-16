@@ -20,7 +20,7 @@ test("completes the official MCP initialize, list, and call flow", async () => {
     const tools = await client.listTools();
     const result = await client.callTool({ name: "hivellm_check_availability", arguments: {} });
 
-    assert.equal(client.getServerVersion().name, "hivellm");
+    assert.deepEqual(client.getServerVersion(), { name: "hivellm", version: "0.1.1" });
     assert.match(client.getInstructions(), /Paid work cannot begin/);
     assert.equal(tools.tools.length, 7);
     assert.equal(result.structuredContent.called, "hivellm_check_availability");

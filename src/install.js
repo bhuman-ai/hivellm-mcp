@@ -87,11 +87,22 @@ export function mergeOpenCodeConfig(source, config, options = {}) {
       HIVELLM_CLIENT_NAME: "OpenCode",
     },
   };
-  const edits = modify(initial, ["mcp", "hivellm"], value, {
+  const legacy = current.mcp?.["castellar-human"];
+  const legacyCommand = Array.isArray(legacy?.command) ? legacy.command.map(String) : [];
+  const isLegacyHiveAdapter = legacy?.type === "local" && legacyCommand.includes("human-mcp");
+  let next = initial;
+
+  if (isLegacyHiveAdapter) {
+    next = applyEdits(next, modify(next, ["mcp", "castellar-human"], undefined, {
+      formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" },
+    }));
+  }
+
+  const edits = modify(next, ["mcp", "hivellm"], value, {
     formattingOptions: { insertSpaces: true, tabSize: 2, eol: "\n" },
     isArrayInsertion: false,
   });
-  return applyEdits(initial, edits);
+  return applyEdits(next, edits);
 }
 
 export function installOpenCode(config, options = {}) {
