@@ -17,6 +17,7 @@ function room(overrides = {}) {
     task: "Review the dashboard",
     operator: null,
     billing: { mode: "fixed_checkpoint", status: "idle", checkpoint: null },
+    starter_task: null,
     latest_message_id: "m1",
     messages: [{ id: "m1", actor: "user", content: "Review the dashboard", at: "2026-07-16T10:00:00Z", metadata: { to: "room" } }],
     rating: null,
@@ -58,6 +59,44 @@ test("frontloads known task context when requesting an expert", async () => {
   assert.match(captured.body.task, /Current state: The AI generated six competing cards/);
   assert.match(captured.body.task, /Requested expertise: product design/);
   assert.equal(result.structuredContent.room_url.includes("hivellm.com/room/42"), true);
+});
+
+test("reports a server-confirmed free starter task", async () => {
+  const result = await callHiveTool(config, "hivellm_request_expert", {
+    task: "Review the onboarding UI",
+    tool: "Codex",
+  }, {
+    request: async () => room({
+      starter_task: {
+        status: "available",
+        max_human_minutes: 20,
+        customer_price_cents: 0,
+        requires_rating: true,
+      },
+    }),
+  });
+
+  assert.deepEqual(result.structuredContent.starter_task, {
+    status: "available",
+    max_human_minutes: 20,
+    customer_price_cents: 0,
+    requires_rating: true,
+  });
+  assert.match(result.content[0].text, /free starter task/);
+  assert.match(result.content[0].text, /20 human minutes/);
+  assert.match(result.content[0].text, /\$0/);
+});
+
+test("does not imply a free task when the server returns normal intake", async () => {
+  const result = await callHiveTool(config, "hivellm_request_expert", {
+    task: "Review the settings UI",
+  }, {
+    request: async () => room(),
+  });
+
+  assert.equal(result.structuredContent.starter_task, null);
+  assert.match(result.content[0].text, /free intake/);
+  assert.match(result.content[0].text, /user approves a fixed-price checkpoint/);
 });
 
 test("distinguishes expert questions for the user from AI instructions", async () => {

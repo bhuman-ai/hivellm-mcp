@@ -39,6 +39,7 @@ function roomForClient(room, input = {}) {
     task: room.task,
     operator: room.operator || null,
     billing: room.billing || null,
+    starter_task: room.starter_task || null,
     latest_message_id: messages.at(-1)?.id || null,
     messages: visibleMessages.map((message) => ({
       id: message.id,
@@ -67,7 +68,7 @@ function taskBrief(args) {
 export const HIVELLM_TOOLS = [
   {
     name: "hivellm_check_availability",
-    description: "Check whether a vetted hiveLLM expert is available and show the pricing rules. Use this before requesting an expert.",
+    description: "Check whether a vetted hiveLLM expert is available, whether this account has a free starter task, and the pricing rules. Use this before requesting an expert.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -76,7 +77,7 @@ export const HIVELLM_TOOLS = [
   },
   {
     name: "hivellm_request_expert",
-    description: "Start free intake and request a real human expert for the current task. This cannot start paid work; the user must approve any fixed-price checkpoint in the room first. Include context already present in the conversation instead of asking the user to repeat it.",
+    description: "Request a real human expert for the current task. The server will confirm whether this room is the account's one-time free starter task, capped at 20 human minutes, or normal free intake where paid work requires user approval of a fixed-price checkpoint. Include context already present in the conversation instead of asking the user to repeat it.",
     inputSchema: {
       type: "object",
       additionalProperties: false,
@@ -183,8 +184,11 @@ export async function callHiveTool(config, name, rawArgs = {}, options = {}) {
       tool: asText(args.tool, config.clientName),
     });
     const data = roomForClient(room);
+    const summary = data.starter_task
+      ? `hiveLLM room ${room.id} is ready as this account's free starter task, capped at ${data.starter_task.max_human_minutes} human minutes for $0. Share the room link with the user, wait for the expert with hivellm_wait_for_expert, and ask the user for an honest rating when the result is complete.`
+      : `hiveLLM room ${room.id} is ready for free intake. Share the room link with the user, then wait for the expert with hivellm_wait_for_expert. Paid work cannot begin until the user approves a fixed-price checkpoint in the room.`;
     return toolResult(
-      `hiveLLM room ${room.id} is ready. Share the room link with the user, then wait for the expert with hivellm_wait_for_expert.`,
+      summary,
       data
     );
   }
